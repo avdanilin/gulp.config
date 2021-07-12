@@ -1,7 +1,8 @@
 @import 'second';
 
-$red: red;
+$color: purple;
 
 h1 {
-  color: $red;
+  font-family: 'Roboto', Arial, sans-serif;
+  color: $color;
 }
