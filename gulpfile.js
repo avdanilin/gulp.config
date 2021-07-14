@@ -10,62 +10,73 @@ const autoprefixer = require('gulp-autoprefixer')
 const sync = require('browser-sync').create()
 const imagemin = require('gulp-imagemin') // Подключаем библиотеку для работы с изображениями
 const pngquant = require('imagemin-pngquant') // Подключаем библиотеку для работы с png
-cache = require('gulp-cache') // Подключаем библиотеку кеширования
+const cache = require('gulp-cache') // Подключаем библиотеку кеширования
+const util = require('gulp-util')
+const sourcemaps = require('gulp-sourcemaps')
+const isProd = util.env.production
 
 function html() {
     return src('src/**.html') // Выборка исходных файлов для обработки плагином
         .pipe(include({
             prefix: '@@'
         }))
-        .pipe(htmlmin({
-            collapseWhitespace: true
-        }))
+        .pipe(isProd ? htmlmin({collapseWhitespace: true}) : util.noop())
         .pipe(dest('dist')) // Вывод результирующего файла в папку назначения (dest - пункт назначения)
 }
 
 function scssFont() {
     return src('src/scss/fonts.scss')
+        .pipe(!isProd ? sourcemaps.init() : util.noop())
         .pipe(sass())
-        .pipe(csso())
-        .pipe(concat('fonts.min.css'))
+        .pipe(isProd ? csso() : util.noop())
+        .pipe(concat('fonts.css'))
+        .pipe(!isProd ? sourcemaps.write() : util.noop())
         .pipe(dest('dist'))
 }
 
 function scssLibraries() {
     return src(['src/libs/scss/**/*.scss', 'src/libs/scss/**/*.css'])
+        .pipe(!isProd ? sourcemaps.init() : util.noop())
         .pipe(sass())
         .pipe(autoprefixer({
             overrideBrowserslist: ['last 2 versions'],
             cascade: false
         }))
-        .pipe(csso())
-        .pipe(concat('libraries.min.css'))
+        .pipe(isProd ? csso() : util.noop())
+        .pipe(!isProd ? sourcemaps.write() : util.noop())
+        .pipe(concat('libraries.css'))
         .pipe(dest('dist'))
 }
 
 function scss() {
     return src('src/scss/**.scss')
+        .pipe(!isProd ? sourcemaps.init() : util.noop())
         .pipe(sass())
         .pipe(autoprefixer({
             overrideBrowserslist: ['last 2 versions'],
             cascade: false
         }))
-        .pipe(csso())
-        .pipe(concat('style.min.css'))
+        .pipe(isProd ? csso() : util.noop())
+        .pipe(concat('style.css'))
+        .pipe(!isProd ? sourcemaps.write() : util.noop())
         .pipe(dest('dist'))
 }
 
 function jsLibraries() {
     return src('src/libs/js/**/*.js')
-        .pipe(uglify())
-        .pipe(concat('libraries.min.js'))
+        .pipe(!isProd ? sourcemaps.init() : util.noop())
+        .pipe(isProd ? uglify() : util.noop())
+        .pipe(concat('libraries.js'))
+        .pipe(!isProd ? sourcemaps.write() : util.noop())
         .pipe(dest('dist'))
 }
 
 function js() {
     return src('src/js/**.js')
-        .pipe(uglify())
-        .pipe(concat('app.min.js'))
+        .pipe(!isProd ? sourcemaps.init() : util.noop())
+        .pipe(isProd ? uglify() : util.noop())
+        .pipe(concat('app.js'))
+        .pipe(!isProd ? sourcemaps.write() : util.noop())
         .pipe(dest('dist'))
 }
 
@@ -82,7 +93,7 @@ function img() {
             svgoPlugins: [{removeViewBox: false}],
             use: [pngquant()]
         })))
-        .pipe(dest('dist/img')) // Выгружаем на продакшен
+        .pipe(dest('dist/img')) // Выгружаем на прод
 }
 
 function clear() {

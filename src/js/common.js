@@ -1,7 +1,14 @@
-console.log(123)
+async function start() {
+    return await Promise.resolve('async is working')
+}
 
-console.log(jQuery().jquery)
+start().then(console.log)
 
-$(document).ready(function () {
-    $('.mfp-img').magnificPopup({type: 'image'});
-});
+const unused = 42
+
+class Util {
+    static id = Date.now()
+}
+
+console.log('Util Id:', Util.id)
+console.log(unused)
