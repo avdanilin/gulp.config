@@ -12,3 +12,5 @@ class Util {
 
 console.log('Util Id:', Util.id)
 console.log(unused)
+
+$('.mfp-img').magnificPopup({type: 'image'});

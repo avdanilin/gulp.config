@@ -1,7 +1,7 @@
 const {src, dest, series, watch} = require('gulp')
 const sass = require('gulp-sass')(require('sass'))
 const csso = require('gulp-csso')
-const uglify = require('gulp-uglify')
+const uglify = require('gulp-uglify-es').default
 const include = require('gulp-file-include')
 const htmlmin = require('gulp-htmlmin')
 const del = require('del')
@@ -14,6 +14,8 @@ const cache = require('gulp-cache') // Подключаем библиотеку
 const util = require('gulp-util')
 const sourcemaps = require('gulp-sourcemaps')
 const isProd = util.env.production
+const through = require('through2')
+const favicons = require('gulp-favicons')
 
 function html() {
     return src('src/**.html') // Выборка исходных файлов для обработки плагином
@@ -22,6 +24,34 @@ function html() {
         }))
         .pipe(isProd ? htmlmin({collapseWhitespace: true}) : util.noop())
         .pipe(dest('dist')) // Вывод результирующего файла в папку назначения (dest - пункт назначения)
+}
+
+function fav() {
+    return src('src/favicon.png').pipe(
+        favicons({
+            settings: {
+                appName: 'gulp.config',
+                appShortName: 'gulp.config',
+                appDescription: 'gulp.config',
+                path: 'favicons/',
+                url: 'gulp.config',
+                display: 'standalone',
+                orientation: 'portrait',
+                scope: '',
+                start_url: '',
+                version: 1.0,
+                logging: false,
+                html: 'index.html',
+                pipeHTML: true,
+                replace: true,
+                background: '#ffffff',
+                vinylMode: true
+            }
+        }))
+        .pipe(through.obj(function (file, enc, cb) {
+            this.push(file);
+            cb();
+        })).pipe(dest('dist/favicons/'));
 }
 
 function scssFont() {
@@ -106,10 +136,11 @@ function serve() {
     })
 
     watch('src/**.html', series(html)).on('change', sync.reload)
-    watch('src/scss/**.scss', series(scss)).on('change', sync.reload)
+    watch('src/img/**', series(img)).on('change', sync.reload)
+    watch(['src/libs/**/**.scss', 'src/scss/**.scss'], series(scss)).on('change', sync.reload)
     watch('src/js/**.js', series(js)).on('change', sync.reload)
 }
 
-exports.build = series(clear, html, fonts, img, scssFont, scssLibraries, scss, jsLibraries, js)
+exports.build = series(clear, html, fonts, img, scssFont, scssLibraries, scss, jsLibraries, js) //fav
 exports.serve = series(clear, html, fonts, img, scssFont, scssLibraries, scss, jsLibraries, js, serve)
 exports.clear = clear
